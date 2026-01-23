@@ -14,7 +14,7 @@ class Drivetrain:
         self.left_motor = left_motor
         self.right_motor = right_motor
 
-        # desired state (like WPILib)
+        # desired state 
         self.left_target = 0.0
         self.right_target = 0.0
 

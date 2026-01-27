@@ -7,6 +7,19 @@ import tty
 
 from gpiozero import Motor, Device
 from gpiozero.pins.mock import MockFactory
+from gpiozero.exc import PinPWMUnsupported
+
+# If this file is executed directly (python Commands/driving_teleop.py),
+# Python sets `__package__` to None and `sys.path[0]` becomes the
+# `Commands/` directory. That prevents `from Commands...` imports from
+# resolving. Ensure the project root is on `sys.path` so package imports
+# work when running the script by path.
+if __package__ is None:
+    import pathlib
+    import sys
+
+    project_root = pathlib.Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(project_root))
 
 from Commands.constants import INPUT_TIMEOUT, LOOP_HZ
 from Commands.subsystems.DrivingSubsystem import Drivetrain
@@ -33,16 +46,18 @@ def _read_key(timeout=0.0):
 
 
 def main():
-    left_motor = Motor(
-        forward=LEFT_FORWARD_PIN,
-        backward=LEFT_BACKWARD_PIN,
-        enable=LEFT_ENABLE_PIN,
-    )
-    right_motor = Motor(
-        forward=RIGHT_FORWARD_PIN,
-        backward=RIGHT_BACKWARD_PIN,
-        enable=RIGHT_ENABLE_PIN,
-    )
+    def _make_motor(forward, backward, enable):
+        try:
+            return Motor(forward=forward, backward=backward, enable=enable)
+        except PinPWMUnsupported:
+            # Mock pin factory doesn't support PWM on the enable pin.
+            # Fall back to creating the Motor without an enable pin so
+            # the code can run in mock/testing environments.
+            print("Warning: PWM not supported on enable pin; creating Motor without enable")
+            return Motor(forward=forward, backward=backward)
+
+    left_motor = _make_motor(LEFT_FORWARD_PIN, LEFT_BACKWARD_PIN, LEFT_ENABLE_PIN)
+    right_motor = _make_motor(RIGHT_FORWARD_PIN, RIGHT_BACKWARD_PIN, RIGHT_ENABLE_PIN)
     drivetrain = Drivetrain(left_motor, right_motor)
 
     old_settings = termios.tcgetattr(sys.stdin)

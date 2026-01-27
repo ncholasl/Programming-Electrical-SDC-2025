@@ -1,4 +1,0 @@
-# Algorithm File 
-Use this file as notes for Algorithm.
-
-Input-->(Bluetooth)-->Raspberry Pi--> Process(Code)-->Execute the Command

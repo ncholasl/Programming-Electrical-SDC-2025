@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .control-group { display: flex; align-items: center; justify-content: space-between; margin: 10px; }
+        button { width: 80px; height: 50px; font-weight: bold; }
+        img { width: 100%; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <h2>SDC Teleop: 5-DOF Arm</h2>
+    <img src="{{ url_for('video_feed') }}">
+
+    <div class="control-group">
+        <span>BASE:</span>
+        <button onclick="sendMove('base', 'up')">LEFT</button>
+        <button onclick="sendMove('base', 'down')">RIGHT</button>
+    </div>
+    
+    <div class="control-group">
+        <span>CLAW:</span>
+        <button onclick="sendMove('claw', 'up')">OPEN</button>
+        <button onclick="sendMove('claw', 'down')">CLOSE</button>
+    </div>
+
+    <script>
+        function sendMove(jointName, dir) {
+            let formData = new FormData();
+            formData.append('joint', jointName);
+            formData.append('dir', dir);
+            fetch('/move', { method: 'POST', body: formData });
+        }
+    </script>
+</body>
+</html>

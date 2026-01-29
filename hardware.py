@@ -1,35 +1,25 @@
-from gpiozero import Motor, Servo, OutputDevice
-from gpiozero.pins.mock import MockFactory
-import os
+from gpiozero import AngularServo
+from gpiozero.pins.pigpio import PiGPIOFactory # Better for smooth servo movement
 
-# Ensure mock factory is used if on Mac
-if os.uname().sysname != 'Linux':
-    from gpiozero import Device
-    Device.pin_factory = MockFactory()
-
-class RobotHardware:
+class RobotArm:
     def __init__(self):
-        # Drive Train (4 Motors)
-        self.left_front = Motor(forward=17, backward=18)
-        self.right_front = Motor(forward=22, backward=23)
+        # Define pins for your 5-DOF (Adjust these to your actual wiring!)
+        self.base = AngularServo(17, min_angle=-90, max_angle=90)
+        self.shoulder = AngularServo(27, min_angle=-90, max_angle=90)
+        self.elbow = AngularServo(22, min_angle=-90, max_angle=90)
+        self.wrist = AngularServo(23, min_angle=-90, max_angle=90)
+        self.claw = AngularServo(24, min_angle=-90, max_angle=90)
         
-        # Conveyor & Sorting
-        self.conveyor = Motor(forward=24, backward=25)
-        self.kicker = Servo(12) # Servo for the "Kick Arm"
+        # Starting positions
+        self.angles = {"base": 0, "shoulder": 0, "elbow": 0, "wrist": 0, "claw": 0}
 
-        # 5-DOF Arm (Mocking pins)
-        self.arm_base = Servo(5)
-        self.arm_shoulder = Servo(6)
-        self.arm_elbow = Servo(13)
-        self.arm_wrist = Servo(19)
-        self.arm_claw = Servo(26)
-
-    def drive_forward(self):
-        print("MOCK: Driving Forward")
-        self.left_front.forward()
-        self.right_front.forward()
-
-    def stop(self):
-        self.left_front.stop()
-        self.right_front.stop()
-        self.conveyor.stop()
+    def move_joint(self, joint_name, step):
+        # Calculate new angle
+        new_angle = self.angles[joint_name] + step
+        
+        # Constraint check (Safety first for the presentation!)
+        if -90 <= new_angle <= 90:
+            self.angles[joint_name] = new_angle
+            joint = getattr(self, joint_name)
+            joint.angle = new_angle
+            print(f"Moving {joint_name} to {new_angle}")
